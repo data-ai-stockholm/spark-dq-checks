@@ -51,8 +51,7 @@ This installs:
 Place the CSV at:
 `data/Total_Reported_offences_1950_2023.csv`
 
-The sample pipeline expects that exact path/name. You can replace it with your own data but update the path in `src/sparkdq/main.py` accordingly.
-
+The sample pipeline expects that exact path/name. 
 
 ### Run locally
 Two options:
@@ -90,7 +89,7 @@ For local runs, `src/sparkdq/main.py` builds a small `rules_df` with examples su
 - Total crimes positive
 - No duplicate years (aggregate uniqueness)
 
-The SQL files in `sql/` show how you might manage rules in a metastore (e.g., Databricks/Unity Catalog) but they are not required for the local demo.
+The SQL files in `sql/` show how you might manage rules in a metastore.
 
 
 ### Testing
@@ -106,6 +105,6 @@ pytest -q
 
 
 ### License
-MIT (or your preferred license). Update as appropriate.
+MIT (or your preferred license).
 
 
