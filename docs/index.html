@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARK-DQ-SHIFTLEFT Architecture | Meghna Anand</title>
+    <meta name="description" content="Two-phase data quality pipeline architecture using PySpark and Spark-Expectations">
+    <meta name="author" content="Meghna Anand">
+    
+    <!-- React and Babel from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes flowAnimation {
+            0% {
+                stroke-dashoffset: 1000;
+            }
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .flow-line {
+            stroke-dasharray: 10 5;
+            animation: flowAnimation 2s linear infinite;
+        }
+        
+        .glow {
+            filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.5));
+        }
+        
+        .tech-tag {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function SparkDQArchitecture() {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 font-sans">
+                    <div className="max-w-7xl mx-auto">
+                        {/* Header */}
+                        <div className="text-center mb-12 fade-in-up" style={{ animationDelay: '0.1s' }}>
+                            <h1 className="section-title text-5xl font-bold text-white mb-3 tracking-tight">
+                                SPARK-DQ-SHIFTLEFT
+                            </h1>
+                            <p className="text-slate-400 text-lg">
+                                Two-Phase Data Quality Pipeline Architecture
+                            </p>
+                            <div className="mt-4 flex justify-center gap-4 flex-wrap">
+                                <span className="tech-tag bg-orange-600/20 text-orange-400 px-4 py-1 rounded-full text-sm border border-orange-600/40">
+                                    PySpark
+                                </span>
+                                <span className="tech-tag bg-purple-600/20 text-purple-400 px-4 py-1 rounded-full text-sm border border-purple-600/40">
+                                    Spark-Expectations
+                                </span>
+                                <span className="tech-tag bg-emerald-600/20 text-emerald-400 px-4 py-1 rounded-full text-sm border border-emerald-600/40">
+                                    Delta Lake
+                                </span>
+                                <span className="tech-tag bg-blue-600/20 text-blue-400 px-4 py-1 rounded-full text-sm border border-blue-600/40">
+                                    4 DQ Rules
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Architecture Diagram */}
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700 mb-8 fade-in-up" style={{ animationDelay: '0.2s' }}>
+                            <svg viewBox="0 0 1200 900" className="w-full h-auto">
+                                <defs>
+                                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                                        <stop offset="100%" stopColor="#1e40af" stopOpacity="0.8" />
+                                    </linearGradient>
+                                    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+                                        <stop offset="100%" stopColor="#059669" stopOpacity="0.8" />
+                                    </linearGradient>
+                                    <linearGradient id="redGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+                                        <stop offset="100%" stopColor="#dc2626" stopOpacity="0.8" />
+                                    </linearGradient>
+                                    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.8" />
+                                        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.8" />
+                                    </linearGradient>
+                                </defs>
+
+                                {/* Data Source */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.3s' }}>
+                                    <rect x="450" y="20" width="300" height="80" rx="12" fill="url(#blueGradient)" stroke="#60a5fa" strokeWidth="2" />
+                                    <text x="600" y="50" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold" fontFamily="Outfit">
+                                        📁 Data Source
+                                    </text>
+                                    <text x="600" y="75" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontFamily="JetBrains Mono">
+                                        Total_Reported_offences_1950_2023.csv
+                                    </text>
+                                </g>
+
+                                {/* Arrow to Phase 1 */}
+                                <path d="M 600 100 L 600 160" stroke="#60a5fa" strokeWidth="3" fill="none" className="flow-line" />
+                                <polygon points="600,160 595,150 605,150" fill="#60a5fa" />
+
+                                {/* Phase 1: Shift-Left Data Cleaning */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.4s' }}>
+                                    <rect x="350" y="180" width="500" height="150" rx="12" fill="#1e293b" stroke="#34d399" strokeWidth="3" />
+                                    <text x="600" y="210" textAnchor="middle" fill="#34d399" fontSize="20" fontWeight="bold" fontFamily="Outfit">
+                                        PHASE 1: SHIFT-LEFT CLEANING
+                                    </text>
+                                    
+                                    {/* Phase 1 Operations */}
+                                    <g>
+                                        <rect x="370" y="230" width="220" height="80" rx="8" fill="#0f172a" stroke="#64748b" strokeWidth="1.5" />
+                                        <text x="480" y="255" textAnchor="middle" fill="white" fontSize="14" fontWeight="600" fontFamily="Outfit">
+                                            Basic Transformations
+                                        </text>
+                                        <text x="480" y="275" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Remove nulls
+                                        </text>
+                                        <text x="480" y="290" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Standardize columns
+                                        </text>
+                                        <text x="480" y="305" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Cast data types
+                                        </text>
+                                    </g>
+                                    
+                                    <g>
+                                        <rect x="610" y="230" width="220" height="80" rx="8" fill="#0f172a" stroke="#64748b" strokeWidth="1.5" />
+                                        <text x="720" y="255" textAnchor="middle" fill="white" fontSize="14" fontWeight="600" fontFamily="Outfit">
+                                            Output
+                                        </text>
+                                        <text x="720" y="280" textAnchor="middle" fill="#fbbf24" fontSize="12" fontFamily="JetBrains Mono">
+                                            offences_cleaned_no_dq/
+                                        </text>
+                                        <text x="720" y="300" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            Delta format
+                                        </text>
+                                    </g>
+                                </g>
+
+                                {/* Arrow to Phase 2 */}
+                                <path d="M 600 330 L 600 390" stroke="#34d399" strokeWidth="3" fill="none" className="flow-line" />
+                                <polygon points="600,390 595,380 605,380" fill="#34d399" />
+
+                                {/* Phase 2: Advanced DQ with Spark-Expectations */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.5s' }}>
+                                    <rect x="250" y="410" width="700" height="200" rx="12" fill="#1e293b" stroke="#a855f7" strokeWidth="3" />
+                                    <text x="600" y="440" textAnchor="middle" fill="#a855f7" fontSize="20" fontWeight="bold" fontFamily="Outfit">
+                                        PHASE 2: ADVANCED DATA QUALITY
+                                    </text>
+                                    <text x="600" y="460" textAnchor="middle" fill="#c4b5fd" fontSize="13" fontFamily="JetBrains Mono">
+                                        Powered by Spark-Expectations Framework
+                                    </text>
+                                    
+                                    {/* DQ Rules Engine */}
+                                    <g>
+                                        <rect x="270" y="480" width="250" height="110" rx="8" fill="#0f172a" stroke="#8b5cf6" strokeWidth="2" />
+                                        <text x="395" y="505" textAnchor="middle" fill="#c4b5fd" fontSize="14" fontWeight="600" fontFamily="Outfit">
+                                            DQ Rules Engine
+                                        </text>
+                                        <text x="395" y="525" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Year range validation
+                                        </text>
+                                        <text x="395" y="540" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Count ≥ 0
+                                        </text>
+                                        <text x="395" y="555" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Type of offence not null
+                                        </text>
+                                        <text x="395" y="570" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
+                                            • Crime category validation
+                                        </text>
+                                    </g>
+                                    
+                                    {/* Validation Process */}
+                                    <g>
+                                        <circle cx="600" cy="535" r="50" fill="url(#purpleGradient)" stroke="#a855f7" strokeWidth="2" className="glow" />
+                                        <text x="600" y="530" textAnchor="middle" fill="white" fontSize="12" fontWeight="600" fontFamily="Outfit">
+                                            Validate
+                                        </text>
+                                        <text x="600" y="545" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontFamily="JetBrains Mono">
+                                            Records
+                                        </text>
+                                    </g>
+                                    
+                                    {/* Valid Records */}
+                                    <g>
+                                        <rect x="680" y="480" width="120" height="50" rx="8" fill="url(#greenGradient)" stroke="#10b981" strokeWidth="2" />
+                                        <text x="740" y="502" textAnchor="middle" fill="white" fontSize="12" fontWeight="600" fontFamily="Outfit">
+                                            ✓ Valid
+                                        </text>
+                                        <text x="740" y="518" textAnchor="middle" fill="#d1fae5" fontSize="10" fontFamily="JetBrains Mono">
+                                            Clean Data
+                                        </text>
+                                    </g>
+                                    
+                                    {/* Invalid Records */}
+                                    <g>
+                                        <rect x="680" y="540" width="120" height="50" rx="8" fill="url(#redGradient)" stroke="#ef4444" strokeWidth="2" />
+                                        <text x="740" y="562" textAnchor="middle" fill="white" fontSize="12" fontWeight="600" fontFamily="Outfit">
+                                            ✗ Invalid
+                                        </text>
+                                        <text x="740" y="578" textAnchor="middle" fill="#fee2e2" fontSize="10" fontFamily="JetBrains Mono">
+                                            Error Records
+                                        </text>
+                                    </g>
+                                    
+                                    {/* Arrows from validation */}
+                                    <path d="M 650 520 L 680 505" stroke="#10b981" strokeWidth="2" fill="none" />
+                                    <path d="M 650 550 L 680 565" stroke="#ef4444" strokeWidth="2" fill="none" />
+                                </g>
+
+                                {/* Output Storage */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.6s' }}>
+                                    {/* Clean Output */}
+                                    <path d="M 740 530 L 740 660" stroke="#10b981" strokeWidth="2" fill="none" className="flow-line" />
+                                    <polygon points="740,660 735,650 745,650" fill="#10b981" />
+                                    
+                                    <rect x="640" y="680" width="200" height="80" rx="10" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
+                                    <text x="740" y="705" textAnchor="middle" fill="#34d399" fontSize="13" fontWeight="bold" fontFamily="Outfit">
+                                        📊 Clean Data
+                                    </text>
+                                    <text x="740" y="725" textAnchor="middle" fill="#d1fae5" fontSize="11" fontFamily="JetBrains Mono">
+                                        offences_cleaned_with_dq/
+                                    </text>
+                                    <text x="740" y="745" textAnchor="middle" fill="#86efac" fontSize="10" fontFamily="JetBrains Mono">
+                                        Delta Lake format
+                                    </text>
+
+                                    {/* Error Output */}
+                                    <path d="M 740 590 L 900 640 L 900 660" stroke="#ef4444" strokeWidth="2" fill="none" className="flow-line" />
+                                    <polygon points="900,660 895,650 905,650" fill="#ef4444" />
+                                    
+                                    <rect x="800" y="680" width="200" height="80" rx="10" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" />
+                                    <text x="900" y="705" textAnchor="middle" fill="#f87171" fontSize="13" fontWeight="bold" fontFamily="Outfit">
+                                        ⚠️ Error Records
+                                    </text>
+                                    <text x="900" y="725" textAnchor="middle" fill="#fecaca" fontSize="11" fontFamily="JetBrains Mono">
+                                        offences_*_error/
+                                    </text>
+                                    <text x="900" y="745" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono">
+                                        With error metadata
+                                    </text>
+
+                                    {/* Stats Output */}
+                                    <path d="M 395 590 L 300 640 L 300 660" stroke="#fbbf24" strokeWidth="2" fill="none" className="flow-line" />
+                                    <polygon points="300,660 295,650 305,650" fill="#fbbf24" />
+                                    
+                                    <rect x="200" y="680" width="200" height="80" rx="10" fill="#451a03" stroke="#fbbf24" strokeWidth="2" />
+                                    <text x="300" y="705" textAnchor="middle" fill="#fbbf24" fontSize="13" fontWeight="bold" fontFamily="Outfit">
+                                        📈 DQ Statistics
+                                    </text>
+                                    <text x="300" y="725" textAnchor="middle" fill="#fde68a" fontSize="11" fontFamily="JetBrains Mono">
+                                        dq_stats/
+                                    </text>
+                                    <text x="300" y="745" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="JetBrains Mono">
+                                        Validation metrics
+                                    </text>
+                                </g>
+
+                                {/* Technical Stack Labels */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.7s' }}>
+                                    <text x="50" y="280" fill="#94a3b8" fontSize="11" fontWeight="600" fontFamily="Outfit">
+                                        Technology:
+                                    </text>
+                                    <text x="50" y="300" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">
+                                        • PySpark
+                                    </text>
+                                    <text x="50" y="318" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">
+                                        • Python 3.x
+                                    </text>
+                                    
+                                    <text x="50" y="530" fill="#94a3b8" fontSize="11" fontWeight="600" fontFamily="Outfit">
+                                        Framework:
+                                    </text>
+                                    <text x="50" y="550" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">
+                                        • Spark-Expectations
+                                    </text>
+                                    <text x="50" y="568" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">
+                                        • Nike OSS
+                                    </text>
+                                </g>
+
+                                {/* Legend */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.8s' }}>
+                                    <rect x="50" y="800" width="400" height="80" rx="8" fill="#0f172a" stroke="#475569" strokeWidth="1" />
+                                    <text x="250" y="825" textAnchor="middle" fill="#cbd5e1" fontSize="12" fontWeight="600" fontFamily="Outfit">
+                                        Pipeline Benefits
+                                    </text>
+                                    <text x="70" y="845" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
+                                        ✓ Early error detection (shift-left approach)
+                                    </text>
+                                    <text x="70" y="860" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
+                                        ✓ Automated quality validation with configurable rules
+                                    </text>
+                                    <text x="70" y="875" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
+                                        ✓ Separate clean/error data streams with full audit trail
+                                    </text>
+                                </g>
+
+                                {/* Data Flow Label */}
+                                <g className="fade-in-up" style={{ animationDelay: '0.9s' }}>
+                                    <rect x="1030" y="30" width="140" height="40" rx="6" fill="#1e293b" stroke="#3b82f6" strokeWidth="1.5" />
+                                    <text x="1100" y="55" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="600" fontFamily="Outfit">
+                                        Data Flow
+                                    </text>
+                                    <line x1="1050" y1="60" x2="1150" y2="60" stroke="#60a5fa" strokeWidth="2" strokeDasharray="10 5" />
+                                </g>
+                            </svg>
+                        </div>
+
+                        {/* Key Metrics */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                            {[
+                                { label: 'Data Points', value: '74 years', color: 'blue', delay: '0.3s' },
+                                { label: 'Pipeline Phases', value: '2 stages', color: 'green', delay: '0.4s' },
+                                { label: 'DQ Rules', value: '4 checks', color: 'purple', delay: '0.5s' },
+                                { label: 'Output Formats', value: 'Parquet', color: 'amber', delay: '0.6s' }
+                            ].map((metric, i) => (
+                                <div 
+                                    key={i}
+                                    className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700 fade-in-up"
+                                    style={{ animationDelay: metric.delay }}
+                                >
+                                    <div className={`text-3xl font-bold mb-2 ${
+                                        metric.color === 'blue' ? 'text-blue-400' :
+                                        metric.color === 'green' ? 'text-emerald-400' :
+                                        metric.color === 'purple' ? 'text-purple-400' :
+                                        'text-amber-400'
+                                    }`}>
+                                        {metric.value}
+                                    </div>
+                                    <div className="text-slate-400 text-sm section-title">{metric.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Footer Note */}
+                        <div className="text-center text-slate-500 text-sm tech-tag fade-in-up" style={{ animationDelay: '0.7s' }}>
+                            <p>Architecture for Swedish Crime Statistics Data Quality Pipeline (1950-2023)</p>
+                            <p className="mt-2">Built with PySpark • Spark-Expectations • Delta Lake</p>
+                            <p className="mt-4 text-slate-600">
+                                Created by <a href="https://linkedin.com/in/meghnaa-anand" className="text-blue-400 hover:text-blue-300" target="_blank" rel="noopener noreferrer">Meghna Anand</a> | 
+                                <a href="https://github.com/data-ai-stockholm/spark-dq-checks" className="text-blue-400 hover:text-blue-300 ml-2" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the component
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SparkDQArchitecture />);
+    </script>
+</body>
+</html>
