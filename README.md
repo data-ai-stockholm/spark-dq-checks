@@ -1,9 +1,66 @@
-## spark-dq-shiftleft
+# SPARK-DQ-Checks
 
-Data quality (DQ) pipeline on Apache Spark that demonstrates a shift-left approach to validating datasets using the Spark Expectations framework. The example uses UK crime statistics to show a two-phase pipeline:
+Data quality (DQ) pipeline on Apache Spark that demonstrates a shift-left approach to validating datasets using the Spark Expectations framework. The example uses UK crime statistics (1950-2023) to show a two-phase pipeline:
 
 - Phase 1: Load + basic cleaning (no DQ framework)
 - Phase 2: Apply declarative DQ rules and produce stats/outputs
+
+
+## Architecture
+
+```mermaid
+flowchart TD
+    Input[Input CSV<br/>74 years<br/>1950-2023 Crime Data]
+    
+    Phase1[PHASE 1: Basic Cleaning<br/>Remove nulls • Filter Year > 0]
+    Phase1Output[offences_cleaned_no_dq/<br/>Parquet format]
+    
+    Phase2[PHASE 2: Quality Validation]
+    DQRules[4 DQ Rules<br/>• year_not_null<br/>• year_valid_range<br/>• total_crimes_positive<br/>• no_duplicate_years agg]
+    Validate[Validate Records]
+    
+    CleanData[Clean Data<br/>offences_cleaned_with_dq/<br/>Parquet format<br/>✓ Early detection]
+    ErrorRecords[Error Records<br/>*_error/ + metadata<br/>Failed validations<br/>✓ Auto validation]
+    Statistics[Statistics<br/>dq_stats/<br/>Pass/fail metrics<br/>✓ Separate streams]
+    
+    Input -->|dashed| Phase1
+    Phase1 -->|dashed| Phase1Output
+    Phase1Output -->|dashed| Phase2
+    Phase2 --> DQRules
+    DQRules --> Validate
+    Validate --> CleanData
+    Validate --> ErrorRecords
+    Validate --> Statistics
+    
+    style Input fill:#3b82f6,stroke:#1e40af,color:#fff
+    style Phase1 fill:#10b981,stroke:#059669,color:#fff
+    style Phase1Output fill:#10b981,stroke:#059669,color:#fff
+    style Phase2 fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style DQRules fill:#7c3aed,stroke:#5b21b6,color:#fff
+    style Validate fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style CleanData fill:#10b981,stroke:#059669,color:#fff
+    style ErrorRecords fill:#ef4444,stroke:#dc2626,color:#fff
+    style Statistics fill:#f97316,stroke:#ea580c,color:#fff
+```
+
+The pipeline processes crime data through two phases:
+
+**PHASE 1: Basic Cleaning**
+- Input: CSV file (1950-2023 Crime Data, 74 years)
+- Operations: Remove nulls • Filter Year > 0
+- Output: `offences_cleaned_no_dq/` (Parquet format)
+
+**PHASE 2: Quality Validation**
+- 4 DQ Rules:
+  - `year_not_null` (completeness)
+  - `year_valid_range` (validity)
+  - `total_crimes_positive` (validity)
+  - `no_duplicate_years` (uniqueness - aggregate)
+- Validate Records: Applies rules and routes data to three outputs
+- Outputs:
+  - **Clean Data**: `offences_cleaned_with_dq/` (Parquet format) — Early detection
+  - **Error Records**: `*_error/` tables + metadata (Failed validations) — Auto validation
+  - **Statistics**: `dq_stats/` (Pass/fail metrics) — Separate streams
 
 
 ### Features
@@ -102,9 +159,4 @@ pytest -q
 - Ensure Java is installed and `JAVA_HOME` points to Java 8/11.
 - If Spark errors about warehouse dir, the code sets `spark.sql.warehouse.dir` to `output/spark-warehouse`; make sure the process can write there.
 - If the CSV path is wrong, the pipeline exits early — verify the file exists at `data/Total_Reported_offences_1950_2023.csv`.
-
-
-### License
-MIT (or your preferred license).
-
 
